@@ -327,3 +327,23 @@ SceneDelegate.m文件,注意UINavigationController的创建
     
 }
 ```
+
+## APP中的窗口
+
+![avatar](./image/APP窗口.png)
+
+上图中的两个Controller都处理了一些逻辑。开发者提供Model，系统提供了View供交互，同时系统也提供了Controller做相应的处理。
+
+### UIWindow
+
++ 特殊形式的UIView,提供App中展示内容的基础窗口
++ 只作为容器，和ViewController一起协同工作
++ 通常屏幕上只存在、展示一个UIWindow
++ 使用storyboard会帮助我们自动创建
++ 手动创建的步骤如下
+    
+    + 创建UIWindow
+    + 设置rootViewController
+    + makeKeyAndVisible
+
+![avatar](./image/UIWindow.png)
