@@ -70,8 +70,6 @@ UIView：
 //  ViewController.m
 //  SampleAPP
 //
-//  Created by 孙旭 on 2020/2/26.
-//  Copyright © 2020 孙旭. All rights reserved.
 //
 
 #import "ViewController.h"
