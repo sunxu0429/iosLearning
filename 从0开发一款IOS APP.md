@@ -345,3 +345,60 @@ SceneDelegate.m文件,注意UINavigationController的创建
     + makeKeyAndVisible
 
 ![avatar](./image/UIWindow.png)
+
+### App推荐
+
+![avatar](./image/App推荐.png)
+
+![avatar](./image/方便常用.png)
+
+## delegate设计模式
+
+UITabBarController设计了一些规范的协议，让我们自己去实现
+
+![avatar](./image/delegate.png)
+
+shouldSelectViewController可以判断是否切换```ViewController```
+
+切换完成会触发didSelectViewController
+
+### 如何使用delegate
+
+1.设置self为delegate的接收者，也就是实现方法的对象
+
+```objc
+tabBarController.delegate = self;
+```
+
+2.根据需求按需实现方法
+
+```objc
+- (BOOL)tabBarController:(UITabBarController *)tabBarController shouldSelectViewController:(UIViewController *)viewController {
+    return YES;
+}
+
+- (void)tabBarController:(UITabBarController *)tabBarController didSelectViewController:(UIViewController *)viewController {
+    //播放这个viewController的第一个视频
+
+}
+```
+
+### delegate设计模式
+
+![avatar](./image/delegate设计模式.png)
+
+```objc
+@interface SceneDelegate ()<UITabBarControllerDelegate>
+...
+
+tabbarController.delegate = self;
+
+....
+
+- (void)tabBarController:(UITabBarController *)tabBarController didSelectViewController:(UIViewController *)viewController {
+    NSLog(@"进didSelectViewController");
+};
+
+```
+
+
