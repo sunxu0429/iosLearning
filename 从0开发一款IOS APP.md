@@ -401,4 +401,168 @@ tabbarController.delegate = self;
 
 ```
 
+## 使用UITableView实现简单的列表
 
+列表：
+
++ 数据量大
++ 样式较为统一
++ 通常需要分组
++ 垂直滚动
++ 通常可视区域只有一个(视图的复用)
+
+![列表](./image/列表.png)
+
+### UITableView
+
+![UITableView](./image/UITableView.png)
+
+### UITableViewDataSource
+
+UITableView作为视图，只负责展示，协助管理，不管理数据。需要开发者为UITableView提供展示所需要的数据及Cell。通过delegate模式，开发者需要实现UITableViewDataSource
+
+
+```objc
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section;
+
+// Row display. Implementers should *always* try to reuse cells by setting each cell's reuseIdentifier and querying for available reusable cells with dequeueReusableCellWithIdentifier:
+// Cell gets various attributes set automatically based on table (separators) and data source (accessory views, editing controls)
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath;
+```
+
+UITableViewCell默认提供的样式
+
+![avatar](./image/UITableViewCell样式.png)
+
+UITableViewCell默认提供展示文字和图片
+
+![avatar](./image/UITableViewCell默认提供文字和图片.png)
+
+```objc
+
+#import "ViewController.h"
+
+@interface TestView : UIView
+
+@end
+
+@implementation TestView
+
+...
+
+@interface ViewController()<UITableViewDataSource>
+
+@end
+
+@implementation ViewController
+
+...
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+
+    self.view.backgroundColor = [UIColor whiteColor];
+    
+    UITableView *uiTableView = [[UITableView alloc] initWithFrame:self.view.bounds];
+    uiTableView.dataSource = self;
+    
+    [self.view addSubview:uiTableView];
+    
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    return 20;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier: @"id"];
+    cell.textLabel.text = @"主标题";
+    cell.detailTextLabel.text = @"副标题";
+    return cell;
+}
+
+@end
+
+```
+
+### UITableViewCell的重用
+
+系统提供复用回收池，根据reuseIdentifier作为标识
+
+滚动出去的cell进入回收池，即将进入屏幕的cell从回收池中复用。
+
+![avatar](./image/UITableViewCell重用.png)
+
+```objc
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    //首先从系统复用hu'shou'chi回收池取
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"id"];
+    //取不到创建一个UITableViewCell
+    if(!cell) {
+         UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier: @"id"];
+    }
+    
+   
+    cell.textLabel.text = @"主标题";
+    cell.detailTextLabel.text = @"副标题";
+    return cell;
+}
+```
+
+### 如何标记和记录某个cell
+
+通过section和row结合标记位置，```NSindexPath```对象
+
+![avatar](./image/标记cell.png)
+
+### UITableViewDelegate
+
++ 提供滚动过程中，UITableViewCell的出现，消失时机
++ 提供UITableViewCell的高度、headers以及footers设置
++ 提供UITableViewCell各种行为的回调(点击、删除等)
+
+### UITableViewCell点击进入新页面
+
+```objc
+
+...
+@interface ViewController()<UITableViewDataSource,UITableViewDelegate>
+
+...
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    ...
+    uiTableView.delegate = self;
+    ...
+}
+
+//设置行高为100
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    return 100;
+}
+
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+    UIViewController *controller = [[UIViewController alloc] init];
+    controller.title = [NSString stringWithFormat:@"%@",@(indexPath.row)];
+    [self.navigationController pushViewController:controller animated:YES];
+}
+
+...
+
+```
+
+### UITableView基本使用
+
++ 提供最基础的列表类型视图组件
++ 提供默认基础的UITableViewCell样式、header和footer的管理
++ 提供针对UITableViewCell的复用回收逻辑
++ 提供列表基础功能，如点击、删除、插入等
+
+1. 创建UITableView，设置delegate和datasource，通过两个delegate
+2. 选择实现UITableViewDataSource中方法、行数、cell复用
+3. 选择实现UITableViewDelegate中方法(高度、headerFooter、点击)
