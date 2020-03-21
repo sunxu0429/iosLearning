@@ -566,3 +566,194 @@ UITableViewCell默认提供展示文字和图片
 1. 创建UITableView，设置delegate和datasource，通过两个delegate
 2. 选择实现UITableViewDataSource中方法、行数、cell复用
 3. 选择实现UITableViewDelegate中方法(高度、headerFooter、点击)
+
+## 使用UICollectionView实现瀑布流列表
+
+UITableView的不足
+
+![avatar](./image/UITablView不足.png)
+
+UICollectionView,也只是一个展示的容器，与UITableView有相同的API设计理念--都是基于datasource以及delegate驱动的
+
++ 提供列表展示的容器
++ 内置复用回收池
++ 支持横向+纵向布局
++ 更加灵活的布局样式
++ 更加灵活的动画
++ 更多的装饰视图
++ 布局之间的切换
+
+![avatar](./image/UICollectionViewCell.png)
+
+row --> item
+
++ 由于一行可以展示多个视图，row不能准确的表达
+
+### UICollectionViewCell
+
+1.不提供默认的样式
+
++ 不是以"行"为设计基础
++ 只有contentView/backgroundView
++ 继承自UICollectionReusableView
+
+2.必须先注册Cell类型用于重用
+
+```objc
+- (void)registerClass:(nullable Class)cellClass forCellWithReuseIdentifier:(NSString *)identifier;
+```
+
+```objc
+- (__kindof UICollectionViewCell *)dequeueReusableCellWithReuseIdentifier:(NSString *)identifier forIndexPath:(NSIndexPath *)indexPath;
+```
+
+### 创建一个基本的UICollectionView
+
+新建GTVideoControllerViewController
+
+```objc
+//
+//  GTVideoControllerViewController.m
+//  SampleAPP
+//
+//
+
+#import "GTVideoControllerViewController.h"
+
+@interface GTVideoControllerViewController ()<UICollectionViewDelegate,UICollectionViewDataSource>
+
+@end
+
+@implementation GTVideoControllerViewController
+
+-(instancetype) init{
+    self = [super init];
+    if(self) {
+        self.tabBarItem.title = @"视频";
+    }
+    return self;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.view.backgroundColor = [UIColor whiteColor];
+    
+    UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
+    
+    //创建collectionView需要一个layout，和提供在屏幕中的大小
+    
+    UICollectionView *collectionView = [[UICollectionView alloc] initWithFrame:self.view.bounds collectionViewLayout:flowLayout];
+    
+    collectionView.delegate = self;
+      
+    collectionView.dataSource = self;
+    
+    //注册一个重用的cell类型
+    
+    [collectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"UICollectionViewCell"];
+    
+    
+    [self.view addSubview:collectionView];
+    
+    // Do any additional setup after loading the view.
+}
+
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section{
+    return 20;
+}
+
+// The cell that is returned must be retrieved from a call to -dequeueReusableCellWithReuseIdentifier:forIndexPath:
+- (__kindof UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
+    //在复用回收池中取UICollectionViewCell,如果没有会自动创建
+    UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"UICollectionViewCell" forIndexPath:indexPath];
+    cell.backgroundColor = [UIColor redColor];
+    return cell;
+}
+
+
+@end
+
+```
+
+SceneDelegate.m的视频toolbarItem修改如下：
+
+```objc
+...
+
+ GTVideoControllerViewController *videoController = [[GTVideoControllerViewController alloc] init];
+ ...
+
+[tabbarController setViewControllers: @[navigationController, videoController, controller3, controller4]];
+```
+
+运行后样式如下，点击视频：
+
+![avatar](./image/UICollectionView效果-1.png)
+
+
+### UICollectionViewLayout
+
+用于生成UICollectionView布局信息的抽象类
+
++ UICollectionView提供基本的容器、滚动、复用功能
++ 布局信息完全交给开发者
++ 作为抽象类、业务逻辑需要继承
++ 实现UICollectionViewLayout(UISubclassHooks)中的方法
++ 开发者可以自定义生成attribute，系统通过此进行布局
++ 系统提供默认的流式布局Layout
+
+整体上看，逻辑如下
+
+1.设置一个默认的UICollectionViewLaout
+
+2.在UICollectionViewLaout中设置每一个cell对应的attributes
+
+3.最后将UICollectoinViewLayout赋值给UICollectionView
+
+### 基本的流式布局UICollectionViewFlowLayout
+
+```objc
+UIKIT_EXTERN API_AVAILABLE(ios(6.0)) @interface UICollectionViewFlowLayout : UICollectionViewLayout
+
+```
+
+![UICollectionFlowLayout](./image/UICollectionViewFlowLayout.png)
+
+流式布局，每行排满后自动换行
+
+minimumInteritemSpacing:用来计算一行可以布局多少个item，实际的大小在布局后重设，设置的是minimum值
+
+```objc
+UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
+//统一设置流式布局中cell的宽高
+flowLayout.minimumLineSpacing = 10;
+flowLayout.minimumInteritemSpacing = 10;
+flowLayout.itemSize = CGSizeMake((self.view.frame.size.width - 10) / 2, 300);
+```
+
+如需个性化设置高度，可以在UICollectionViewLayout的delegate提供的钩子函数中写逻辑
+
+```objc
+//个性化设置itemSize
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath{
+    if(indexPath.item % 3 == 0){
+        return CGSizeMake(self.view.frame.size.width, 100);
+    }else {
+       return  CGSizeMake((self.view.frame.size.width - 10) / 2, 300);
+    }
+}
+```
+
+### UICollectionView使用总结
+
+1. 创建UICollectoinViewLayout，使用系统默认流式布局，或自定义布局
+2. 创建UICollectionView,设置delegate和datasource，注册cell类型
+3. 选择实现UICollectionViewDataSource中方法、行数、cell复用
+4. 选择实现UICollectionViewDelegate中方法(点击、滚动等)
+
+### 列表的选择与使用
+
++ UITableView其实算是特殊Flow布局的UICollectionView
++ 简单的列表仍然可以使用UITableView
++ 有双向的布局、特殊布局等非普通场景(瀑布流、弹幕)使用UICollectionView
++ Layout的切换、在选择屏幕时有优雅的动画使用UICollectionView
