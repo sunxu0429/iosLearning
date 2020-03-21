@@ -757,3 +757,92 @@ flowLayout.itemSize = CGSizeMake((self.view.frame.size.width - 10) / 2, 300);
 + 简单的列表仍然可以使用UITableView
 + 有双向的布局、特殊布局等非普通场景(瀑布流、弹幕)使用UICollectionView
 + Layout的切换、在选择屏幕时有优雅的动画使用UICollectionView
+
+## 如何实现多个列表的横向滑动
+
+### UIScrollView
+
+![avatar](./image/UIScrollView.png)
+
+上图中，frame是屏幕的大小，contentSize是展示的图片大小
+
+### UIScrollView的例子，设置翻页显示不同背景
+
+```objc
+//
+//  GTRecommendViewController.m
+
+#import "GTRecommendViewController.h"
+
+@interface GTRecommendViewController ()
+
+@end
+
+@implementation GTRecommendViewController
+
+-(instancetype) init{
+    self = [super init];
+    if(self) {
+        self.tabBarItem.title = @"推荐";
+    }
+    return self;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.view.backgroundColor = [UIColor whiteColor];
+    
+    UIScrollView *scrollView = [[UIScrollView alloc] initWithFrame:self.view.bounds];
+    scrollView.backgroundColor = [UIColor lightGrayColor];
+    scrollView.contentSize = CGSizeMake(self.view.bounds.size.width *5,self.view.bounds.size.height);
+    
+    //滚动翻页类似效果
+    NSArray *colorArray = @[[UIColor redColor],[UIColor blueColor], [UIColor yellowColor], [UIColor lightGrayColor], [UIColor grayColor]];
+    
+    for(int i = 0; i<5;i++) {
+        [scrollView addSubview:({
+            UIView *uiView = [[UIView alloc] initWithFrame:CGRectMake(scrollView.bounds.size.width * i, 0, scrollView.bounds.size.width, scrollView.bounds.size.height)];
+            uiView.backgroundColor = [colorArray objectAtIndex:i];
+            uiView;
+        })];
+    }
+    
+    scrollView.pagingEnabled = YES;
+    [self.view addSubview:scrollView];
+    // Do any additional setup after loading the view.
+}
+
+@end
+
+```
+
+### UIScrollViewDelegate
+
+常用的UIScrollViewDelegate
+
+
+滚动，监听页面滚动以及根据Offset做业务逻辑
+```objc
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView; 
+```
+
+拖拽，中断一些业务逻辑，如视频/gif播放(微信聊天记录，拖拽时gif停止播放)
+
+```objc
+// called on start of dragging (may require some time and or distance to move)
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView;
+
+// called on finger up if the user dragged. decelerate is true if it will continue moving afterwards
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate;
+
+```
+
+减速，页面停止时开始逻辑，如视频自动播放
+
+```objc
+- (void)scrollViewWillBeginDecelerating:(UIScrollView *)scrollView;   // called on finger up as we are moving
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView;      // called when scroll view grinds to a halt
+
+```
+
+
